@@ -21,6 +21,8 @@ import {
 } from "recharts";
 import { funds } from "@/data/fundsData";
 import { Fund } from "@/types/fund";
+import { usdToAed, formatCurrency } from "@/utils/currencyUtils";
+import InteractiveChart from "./InteractiveChart";
 
 // Generate some mock historical data
 const generateHistoricalData = (fund: Fund) => {
@@ -67,7 +69,7 @@ const FundDetail: React.FC = () => {
   const fund = funds.find(f => f.id === fundId);
   
   if (!fund) {
-    return <div className="p-4">Fund not found</div>;
+    return <div className="p-4">الصندوق غير موجود</div>;
   }
   
   const historicalData = generateHistoricalData(fund);
@@ -88,13 +90,19 @@ const FundDetail: React.FC = () => {
   const profit = currentValue - fund.investment;
   const profitPercentage = (profit / fund.investment) * 100;
   
+  // Convert to AED
+  const currentNAVAED = usdToAed(fund.currentNAV);
+  const investmentAED = usdToAed(fund.investment);
+  const currentValueAED = usdToAed(currentValue);
+  const profitAED = usdToAed(profit);
+  
   // Prepare data for pie charts
   const sectorData = fund.sectorAllocation;
   const geographicData = fund.geographicExposure;
   const COLORS = ['#7E69AB', '#10B981', '#F97316', '#0EA5E9', '#D946EF', '#8B5CF6'];
   
   return (
-    <div className="pb-20">
+    <div className="pb-20 font-dubai">
       {/* Back button */}
       <div className="px-4 py-2 flex items-center">
         <button 
@@ -104,14 +112,14 @@ const FundDetail: React.FC = () => {
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
             <path d="m15 18-6-6 6-6"/>
           </svg>
-          Back
+          رجوع
         </button>
       </div>
       
       {/* Fund header */}
       <div className="px-4 mb-4">
         <h1 className="text-xl font-semibold">{fund.name}</h1>
-        <div className="text-sm text-muted-foreground">ISIN: {fund.isin}</div>
+        <div className="text-sm text-muted-foreground">رقم ISIN: {fund.isin}</div>
       </div>
       
       {/* Quick stats */}
@@ -119,9 +127,9 @@ const FundDetail: React.FC = () => {
         <CardContent className="p-4">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <div className="text-sm text-muted-foreground">Current NAV</div>
+              <div className="text-sm text-muted-foreground">صافي قيمة الأصول الحالية</div>
               <div className="text-lg font-semibold">
-                {fund.currency} {fund.currentNAV.toFixed(2)}
+                {formatCurrency(currentNAVAED)}
               </div>
             </div>
             <div className={`text-lg font-semibold px-3 py-1 rounded ${fund.changes.daily >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
@@ -131,25 +139,25 @@ const FundDetail: React.FC = () => {
           
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <div className="text-sm text-muted-foreground">Investment</div>
+              <div className="text-sm text-muted-foreground">الاستثمار</div>
               <div className="font-semibold">
-                {fund.currency} {fund.investment.toLocaleString()}
+                {formatCurrency(investmentAED)}
               </div>
             </div>
             <div>
-              <div className="text-sm text-muted-foreground">Current Value</div>
+              <div className="text-sm text-muted-foreground">القيمة الحالية</div>
               <div className="font-semibold">
-                {fund.currency} {currentValue.toFixed(2)}
+                {formatCurrency(currentValueAED)}
               </div>
             </div>
             <div>
-              <div className="text-sm text-muted-foreground">Profit/Loss</div>
+              <div className="text-sm text-muted-foreground">الربح/الخسارة</div>
               <div className={`font-semibold ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {profit >= 0 ? '+' : ''}{profit.toFixed(2)} {fund.currency}
+                {profit >= 0 ? '+' : ''}{formatCurrency(profitAED)}
               </div>
             </div>
             <div>
-              <div className="text-sm text-muted-foreground">Return</div>
+              <div className="text-sm text-muted-foreground">العائد</div>
               <div className={`font-semibold ${profitPercentage >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {profitPercentage >= 0 ? '+' : ''}{profitPercentage.toFixed(2)}%
               </div>
@@ -158,127 +166,49 @@ const FundDetail: React.FC = () => {
         </CardContent>
       </Card>
       
-      {/* Chart */}
-      <Card className="mx-4 mb-4">
-        <CardContent className="pt-4 px-0 pb-0">
-          <div className="px-4">
-            <h2 className="text-lg font-semibold mb-2">Performance</h2>
-          </div>
-          
-          <div className="h-64">
-            <ChartContainer 
-              className="h-full"
-              config={{
-                line: {
-                  label: "Price",
-                  color: "#8B5CF6"
-                },
-                area: {
-                  label: "Value",
-                  color: "#8B5CF6"
-                }
-              }}
-            >
-              <AreaChart
-                data={filteredData}
-                margin={{
-                  top: 10,
-                  right: 10,
-                  bottom: 0,
-                  left: 0,
-                }}
-              >
-                <defs>
-                  <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                <XAxis 
-                  dataKey="date" 
-                  tick={{ fontSize: 10 }}
-                  tickFormatter={(value) => {
-                    if (timeframe === "1W") return value.slice(-2); // Day
-                    if (timeframe === "1M") return value.slice(-5); // MM-DD
-                    return value.slice(-5); // MM-DD for other timeframes
-                  }}
-                  stroke="#888"
-                />
-                <YAxis 
-                  domain={['auto', 'auto']} 
-                  tick={{ fontSize: 10 }} 
-                  stroke="#888"
-                  hide={true}
-                />
-                <Tooltip 
-                  formatter={(value: number) => [`${fund.currency} ${value.toFixed(2)}`, "Price"]}
-                  labelFormatter={(label) => `Date: ${label}`}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="price" 
-                  stroke="#8B5CF6" 
-                  strokeWidth={2}
-                  fill="url(#colorPrice)"
-                  animationDuration={500}
-                />
-              </AreaChart>
-            </ChartContainer>
-          </div>
-          
-          {/* Time frame selector */}
-          <div className="border-t border-border mt-2">
-            <div className="grid grid-cols-6 divide-x divide-border">
-              {Object.keys(timeframeMap).map((key) => (
-                <button
-                  key={key}
-                  className={`py-3 text-sm font-medium ${timeframe === key ? 'text-primary' : 'text-muted-foreground'}`}
-                  onClick={() => setTimeframe(key)}
-                >
-                  {key}
-                </button>
-              ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Interactive Chart */}
+      <InteractiveChart 
+        data={filteredData}
+        timeframe={timeframe}
+        fund={fund}
+        onTimeframeChange={setTimeframe}
+      />
       
       {/* Tabs for fund details */}
       <div className="px-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full grid grid-cols-3">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="holdings">Holdings</TabsTrigger>
-            <TabsTrigger value="allocation">Allocation</TabsTrigger>
+            <TabsTrigger value="overview">نظرة عامة</TabsTrigger>
+            <TabsTrigger value="holdings">الاستثمارات</TabsTrigger>
+            <TabsTrigger value="allocation">التوزيع</TabsTrigger>
           </TabsList>
           
           {/* Overview Tab */}
           <TabsContent value="overview" className="mt-4">
             <Card>
               <CardContent className="p-4">
-                <h3 className="text-lg font-semibold mb-4">Performance</h3>
+                <h3 className="text-lg font-semibold mb-4">الأداء</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <div className="text-sm text-muted-foreground">Daily Change</div>
+                    <div className="text-sm text-muted-foreground">التغير اليومي</div>
                     <div className={`font-semibold ${fund.changes.daily >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {fund.changes.daily >= 0 ? '+' : ''}{fund.changes.daily}%
                     </div>
                   </div>
                   <div>
-                    <div className="text-sm text-muted-foreground">Weekly Change</div>
+                    <div className="text-sm text-muted-foreground">التغير الأسبوعي</div>
                     <div className={`font-semibold ${fund.changes.weekly >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {fund.changes.weekly >= 0 ? '+' : ''}{fund.changes.weekly}%
                     </div>
                   </div>
                   <div>
-                    <div className="text-sm text-muted-foreground">Monthly Change</div>
+                    <div className="text-sm text-muted-foreground">التغير الشهري</div>
                     <div className={`font-semibold ${fund.changes.monthly >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {fund.changes.monthly >= 0 ? '+' : ''}{fund.changes.monthly}%
                     </div>
                   </div>
                   <div>
-                    <div className="text-sm text-muted-foreground">Yearly Change</div>
+                    <div className="text-sm text-muted-foreground">التغير السنوي</div>
                     <div className={`font-semibold ${fund.changes.yearly >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {fund.changes.yearly >= 0 ? '+' : ''}{fund.changes.yearly}%
                     </div>
@@ -292,13 +222,13 @@ const FundDetail: React.FC = () => {
           <TabsContent value="holdings" className="mt-4">
             <Card>
               <CardContent className="p-4">
-                <h3 className="text-lg font-semibold mb-4">Top Holdings</h3>
+                <h3 className="text-lg font-semibold mb-4">أكبر الاستثمارات</h3>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead className="text-right">Weight</TableHead>
-                      <TableHead className="text-right">Change</TableHead>
+                      <TableHead>الاسم</TableHead>
+                      <TableHead className="text-right">الوزن</TableHead>
+                      <TableHead className="text-right">التغير</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -321,7 +251,7 @@ const FundDetail: React.FC = () => {
           <TabsContent value="allocation" className="mt-4">
             <Card className="mb-4">
               <CardContent className="p-4">
-                <h3 className="text-lg font-semibold mb-4">Sector Allocation</h3>
+                <h3 className="text-lg font-semibold mb-4">التوزيع القطاعي</h3>
                 <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -350,7 +280,7 @@ const FundDetail: React.FC = () => {
             
             <Card>
               <CardContent className="p-4">
-                <h3 className="text-lg font-semibold mb-4">Geographic Exposure</h3>
+                <h3 className="text-lg font-semibold mb-4">التوزيع الجغرافي</h3>
                 <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>

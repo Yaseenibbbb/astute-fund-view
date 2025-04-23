@@ -15,6 +15,7 @@ import {
   Legend
 } from "recharts";
 import { funds } from "@/data/fundsData";
+import { usdToAed, formatCurrency } from "@/utils/currencyUtils";
 
 const PortfolioSummary: React.FC = () => {
   // Calculate summary data
@@ -22,6 +23,11 @@ const PortfolioSummary: React.FC = () => {
   const totalCurrentValue = calculateTotalCurrentValue();
   const totalProfit = calculateTotalProfit();
   const totalProfitPercentage = calculateTotalProfitPercentage();
+  
+  // Convert to AED
+  const totalInvestmentAED = usdToAed(totalInvestment);
+  const totalCurrentValueAED = usdToAed(totalCurrentValue);
+  const totalProfitAED = usdToAed(totalProfit);
   
   // Prepare data for pie chart
   const pieData = funds.map(fund => ({
@@ -34,29 +40,29 @@ const PortfolioSummary: React.FC = () => {
   return (
     <Card className="mb-6">
       <CardContent className="p-4">
-        <h2 className="text-lg font-semibold mb-4">Portfolio Summary</h2>
+        <h2 className="text-lg font-semibold mb-4">ملخص المحفظة</h2>
         
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div>
-            <div className="text-sm text-muted-foreground">Total Investment</div>
+            <div className="text-sm text-muted-foreground">إجمالي الاستثمار</div>
             <div className="font-semibold text-lg">
-              ${totalInvestment.toLocaleString()}
+              {formatCurrency(totalInvestmentAED)}
             </div>
           </div>
           <div>
-            <div className="text-sm text-muted-foreground">Current Value</div>
+            <div className="text-sm text-muted-foreground">القيمة الحالية</div>
             <div className="font-semibold text-lg">
-              ${totalCurrentValue.toLocaleString()}
+              {formatCurrency(totalCurrentValueAED)}
             </div>
           </div>
           <div>
-            <div className="text-sm text-muted-foreground">Total P/L</div>
+            <div className="text-sm text-muted-foreground">الربح / الخسارة الكلية</div>
             <div className={`font-semibold text-lg ${totalProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {totalProfit >= 0 ? '+' : ''}{totalProfit.toLocaleString()}
+              {totalProfit >= 0 ? '+' : ''}{formatCurrency(totalProfitAED)}
             </div>
           </div>
           <div>
-            <div className="text-sm text-muted-foreground">Return</div>
+            <div className="text-sm text-muted-foreground">العائد</div>
             <div className={`font-semibold text-lg ${totalProfitPercentage >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {totalProfitPercentage >= 0 ? '+' : ''}{totalProfitPercentage.toFixed(2)}%
             </div>
@@ -64,7 +70,7 @@ const PortfolioSummary: React.FC = () => {
         </div>
         
         <div className="h-72">
-          <h3 className="text-sm font-medium mb-2">Fund Allocation</h3>
+          <h3 className="text-sm font-medium mb-2">توزيع الصناديق</h3>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie

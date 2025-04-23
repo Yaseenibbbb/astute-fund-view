@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { funds } from "@/data/fundsData";
+import { usdToAed, formatCurrency } from "@/utils/currencyUtils";
 
 const FundsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -13,18 +14,18 @@ const FundsPage: React.FC = () => {
   };
   
   return (
-    <div className="pb-20">
+    <div className="pb-20 font-dubai">
       <div className="p-4">
-        <h1 className="text-2xl font-bold mb-4">Funds</h1>
+        <h1 className="text-2xl font-bold mb-4">الصناديق</h1>
         
         <Card>
           <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Fund</TableHead>
-                  <TableHead className="text-right">NAV</TableHead>
-                  <TableHead className="text-right">Daily Chg</TableHead>
+                  <TableHead>الصندوق</TableHead>
+                  <TableHead className="text-right">صافي قيمة الأصول</TableHead>
+                  <TableHead className="text-right">التغير اليومي</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -39,7 +40,7 @@ const FundsPage: React.FC = () => {
                       <div className="text-xs text-muted-foreground">{fund.isin}</div>
                     </TableCell>
                     <TableCell className="text-right">
-                      {fund.currency} {fund.currentNAV.toFixed(2)}
+                      {formatCurrency(usdToAed(fund.currentNAV))}
                     </TableCell>
                     <TableCell className={`text-right ${fund.changes.daily >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {fund.changes.daily >= 0 ? '+' : ''}{fund.changes.daily}%

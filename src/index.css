@@ -1,6 +1,24 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Dubai Font */
+@font-face {
+  font-family: 'Dubai';
+  src: url('https://c.s-microsoft.com/static/fonts/segoe-ui/west-european/normal/latest.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Dubai';
+  src: url('https://c.s-microsoft.com/static/fonts/segoe-ui/west-european/bold/latest.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
 
 @layer base {
   :root {
@@ -96,6 +114,11 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-dubai;
+    direction: rtl;
+  }
+
+  .font-dubai {
+    font-family: 'Dubai', system-ui, sans-serif;
   }
 }
